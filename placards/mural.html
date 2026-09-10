@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>The March of Progress (Amended)</title>
+<style>html,body{margin:0;height:100%;background:#e6dcc4;overflow:hidden}canvas{display:block;width:100%;height:100%}</style></head>
+<body><canvas id="c" width="2560" height="512"></canvas>
+<script>
+/* the evolution mural, lifted from the museum's engine */
+const g=document.getElementById("c").getContext("2d");g.setTransform(2,0,0,2,0,0);
+const grd=g.createLinearGradient(0,0,0,256);grd.addColorStop(0,"rgb(240,231,210)");grd.addColorStop(1,"rgb(224,211,184)");
+g.fillStyle=grd;g.fillRect(0,0,1280,256);
+g.fillStyle="rgb(160,128,66)";g.fillRect(0,0,1280,10);g.fillRect(0,246,1280,10);
+g.fillStyle="rgb(202,168,98)";g.fillRect(0,10,1280,3);g.fillRect(0,243,1280,3);
+g.strokeStyle="rgba(90,70,40,0.45)";g.lineWidth=3;g.beginPath();g.moveTo(50,206);g.lineTo(1050,206);g.stroke();
+const ink="#4a3520";g.fillStyle=ink;g.strokeStyle=ink;g.lineCap="round";
+const leg=(x1,y1,x2,y2,w)=>{g.lineWidth=w;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();};
+g.save();g.translate(120,0);g.beginPath();g.ellipse(0,178,34,20,-0.5,0,7);g.fill();g.beginPath();g.arc(24,152,12,0,7);g.fill();leg(20,164,34,205,9);leg(-18,192,-26,205,9);leg(-6,192,-2,205,9);g.restore();
+g.save();g.translate(270,0);g.beginPath();g.ellipse(0,168,16,30,-0.22,0,7);g.fill();g.beginPath();g.arc(12,132,11,0,7);g.fill();leg(8,152,22,182,7);leg(-4,194,-8,206,8);leg(6,194,12,206,8);g.restore();
+g.save();g.translate(420,0);g.beginPath();g.ellipse(0,162,14,28,0,0,7);g.fill();g.beginPath();g.arc(0,124,11,0,7);g.fill();leg(-4,188,-6,206,8);leg(4,188,8,206,8);leg(8,150,20,132,6);g.lineWidth=4;g.beginPath();g.moveTo(24,110);g.lineTo(18,206);g.stroke();g.beginPath();g.moveTo(24,110);g.lineTo(20,122);g.stroke();g.restore();
+g.save();g.translate(590,0);g.beginPath();g.ellipse(-14,172,13,22,0.5,0,7);g.fill();g.beginPath();g.arc(4,152,10,0,7);g.fill();leg(-18,190,-18,206,7);leg(-10,192,-4,206,7);g.fillRect(10,166,44,6);leg(14,172,14,206,5);leg(48,172,48,206,5);g.fillRect(20,142,22,20);g.fillStyle="rgb(224,211,184)";g.fillRect(23,145,16,13);g.fillStyle=ink;g.restore();
+g.save();g.translate(760,0);g.beginPath();g.ellipse(0,168,13,26,0.3,0,7);g.fill();g.beginPath();g.arc(16,148,10,0,7);g.fill();leg(-4,192,-6,206,7);leg(6,192,10,206,7);leg(10,160,24,166,5);g.fillRect(24,160,10,16);g.restore();
+g.fillStyle="#33517e";g.save();g.translate(930,0);g.fillRect(-13,132,26,52);g.fillRect(-10,106,20,20);leg(-6,184,-6,206,8);leg(6,184,6,206,8);g.lineWidth=3;g.beginPath();g.moveTo(0,106);g.lineTo(0,94);g.stroke();g.beginPath();g.arc(0,92,3,0,7);g.fill();g.fillRect(-24,138,8,30);g.fillRect(16,138,8,30);g.restore();
+g.save();g.translate(1110,0);g.fillStyle="rgba(46,95,208,0.14)";g.beginPath();g.arc(0,148,44,0,7);g.fill();g.fillStyle="#2e5fd0";g.beginPath();g.arc(0,148,20,0,7);g.fill();g.strokeStyle="#2e5fd0";g.lineWidth=2.5;
+for(let i=0;i<8;i++){const a=i*Math.PI/4;g.beginPath();g.moveTo(Math.cos(a)*26,148+Math.sin(a)*26);g.lineTo(Math.cos(a)*38,148+Math.sin(a)*38);g.stroke();g.beginPath();g.arc(Math.cos(a)*42,148+Math.sin(a)*42,3,0,7);g.fill();}
+g.fillStyle="rgba(74,53,32,0.25)";g.beginPath();g.ellipse(0,206,26,4,0,0,7);g.fill();g.restore();
+g.fillStyle="#6a5230";g.font="600 15px 'Avenir Next','Helvetica Neue',Arial,sans-serif";g.textAlign="center";
+g.fillText("T H E   M A R C H   O F   P R O G R E S S   ·   A M E N D E D",640,234);
+</script></body></html>

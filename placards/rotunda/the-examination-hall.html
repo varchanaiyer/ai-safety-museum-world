@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The Examination Hall · The Museum of AI Safety</title><style>
+:root{--gold:#e9b949;--gold-dim:#96793c;--ink:#ece5d3;--ink-dim:#9a927e;--bg:#0b0b0e;--card:#141318;
+  --serif:"Avenir Next",Avenir,Futura,"Segoe UI","Helvetica Neue",Arial,sans-serif;--caps:ui-sans-serif,-apple-system,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);min-height:100%}
+body{padding:22px 18px 40px}
+.card{max-width:640px;margin:0 auto;background:var(--card);border:1px solid #2b2a30;outline:1px solid rgba(233,185,73,.28);outline-offset:6px;padding:34px 36px 28px}
+.wingchip{font-family:var(--caps);font-size:9px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:12px;font-weight:600}
+.num{font-family:var(--caps);font-size:10px;letter-spacing:.3em;color:var(--ink-dim);text-transform:uppercase}
+h1{font-size:28px;font-weight:500;line-height:1.2;margin:10px 0 4px}
+.obj{font-style:italic;color:var(--ink-dim);font-size:14.5px;margin:16px 0 4px;padding-left:14px;border-left:2px solid var(--gold-dim);line-height:1.5}
+.obj b{font-style:normal;font-family:var(--caps);font-size:9px;letter-spacing:.3em;color:var(--gold);display:block;margin-bottom:4px;text-transform:uppercase}
+p{font-size:15.5px;line-height:1.72;color:#cfc9bb;margin:16px 0 0}
+blockquote{margin:20px 0 0;font-style:italic;color:var(--gold);font-size:14.5px;line-height:1.6;text-align:center;padding:0 12px}
+.btn{display:inline-block;margin-top:22px;font-family:var(--caps);font-size:10px;letter-spacing:.25em;color:var(--gold);border:1px solid var(--gold-dim);padding:11px 20px;text-decoration:none;text-transform:uppercase;background:none;cursor:pointer}
+.btn:hover{background:rgba(233,185,73,.08)}
+.foot{margin-top:28px;padding-top:14px;border-top:1px solid #26252b;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--caps);font-size:9.5px;letter-spacing:.22em;color:var(--ink-dim);text-transform:uppercase}
+.foot a{color:var(--ink);text-decoration:none}.foot a:hover{color:var(--gold)}
+.seen b{color:var(--gold);font-weight:600}
+.plate{width:100%;display:block;margin-top:18px;border:1px solid #2b2a30;image-rendering:pixelated;image-rendering:crisp-edges}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px}
+.item{display:flex;gap:10px;align-items:baseline;padding:9px 11px;border:1px solid #26252b;text-decoration:none;color:#cfc9bb;font-size:14px;line-height:1.35}
+.item:hover{border-color:var(--gold-dim)}.item .no{font-family:var(--caps);font-size:9px;letter-spacing:.1em;color:var(--ink-dim);min-width:20px}
+.hallhead{font-family:var(--caps);font-size:10px;letter-spacing:.3em;text-transform:uppercase;margin:22px 0 8px;display:flex;align-items:center;gap:10px}
+.hallhead::after{content:"";flex:1;height:1px;background:#26252b}
+.item.seen{border-color:rgba(216,180,106,.35)}.item.seen .no{color:var(--gold)}
+</style></head>
+<body><div class="card">
+  <div class="wingchip" style="color:#e2c46e">Governance · The Rotunda</div>
+  <div class="num">Exhibit Nº 08 of 65</div>
+  <h1>The Examination Hall</h1>
+  <div class="obj"><b>In the case</b>An exam blue book, unopened. GRADE: PENDING.</div>
+  <img class="plate" src="../art/rotunda/the-examination-hall.png" alt="An exam blue book, unopened. GRADE: PENDING." width="480" height="270">
+  <p>Before a frontier model ships, teams now sit it down for exams nobody wants it to pass. Can it walk a novice through building a biological weapon? Find and exploit software vulnerabilities on its own? Copy itself onto rented servers? Persuade? Deceive its evaluators?</p><p>These dangerous-capability evaluations, run by labs and by independent institutes, are our tripwires. They share the weakness of all exams: they reveal only what the examiner thought to ask, and they assume the student is not holding back. Evaluation science is young. It is also, for now, much of what stands between a training run and the world.</p>
+  
+  
+  <div class="foot"><a href="../gallery-of-failures/the-sycophant.html">← The Sycophant</a><span class="seen" id="seen"></span><a href="../rotunda/if-then.html">If-Then →</a></div>
+  <div class="foot" style="border:0;margin-top:8px;padding-top:0"><a href="../index.html">Directory</a><a href="../join.html">Get involved</a></div></div>
+<script src="https://play.workadventu.re/iframe_api.js"></script>
+<script>
+(function(){
+  var EX={"n":8,"total":65,"url":"","embed":false};
+  var inWA=false;
+  var ready=new Promise(function(res){ var done=false; var fin=function(){ if(!done){done=true;res();} };
+    if(window.WA&&WA.onInit){ WA.onInit().then(function(){inWA=true;fin();}).catch(fin); } setTimeout(fin,1500); });
+  ready.then(function(){
+    var seenEl=document.getElementById("seen"), seen=[];
+    if(inWA){ try{ var s=WA.player.state.seen; seen=Array.isArray(s)?s.slice():[]; if(EX.n&&seen.indexOf(EX.n)<0){ seen.push(EX.n); WA.player.state.saveVariable("seen",seen,{persist:true,public:false,scope:"world"}); } }catch(e){} }
+    else { try{ seen=JSON.parse(localStorage.getItem("museum-seen")||"[]"); if(EX.n&&seen.indexOf(EX.n)<0){seen.push(EX.n);localStorage.setItem("museum-seen",JSON.stringify(seen));} }catch(e){} }
+    if(seenEl) seenEl.innerHTML="<b>"+seen.length+"</b> / "+EX.total+" seen";
+    document.querySelectorAll("[data-seen]").forEach(function(el){ if(seen.indexOf(+el.getAttribute("data-seen"))>=0) el.classList.add("seen"); });
+    var play=document.getElementById("play");
+    if(play){ play.addEventListener("click",function(ev){ if(inWA&&EX.embed){ ev.preventDefault(); try{ WA.nav.openCoWebSite(EX.url,false,"fullscreen",70,1,true); }catch(e){ window.open(EX.url,"_blank"); } } }); }
+  });
+})();
+</script></body></html>
