@@ -23,7 +23,12 @@ const G = M.composed.MAP, GW = M.composed.MW, GH = M.composed.MH;
 const cell = (x, y) => (x >= 0 && y >= 0 && x < GW && y < GH) ? G[y][x] : "#";
 const isFloor = (x, y) => cell(x, y) === ".";
 const rects = M.composed.ROOMRECTS;
-function regionAt(x, y) { for (const r of rects) if (x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1) return r.key; return "core"; }
+function regionAt(x, y) {
+  const ex = M.exhibits[cell(x, y)];
+  if (ex && ex.wing !== "core" && rects.some(r => r.key === ex.wing)) return ex.wing;   /* an exhibit belongs to the room that declared it, even on a shared wall */
+  for (const r of rects) if (x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1) return r.key;
+  return "core";
+}
 const regions = { core: { key: "core", name: "The Historic Core", bounds: { x0: 0, y0: 0, x1: M.coreW - 1, y1: M.coreH - 1 }, file: "core.tmj" } };
 for (const r of rects) regions[r.key] = { key: r.key, name: M.ZONES[r.key].name, bounds: { x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1 }, file: r.key + ".tmj", def: M.rooms.find(d => d.key === r.key) };
 const links = [], seenPair = new Set();
@@ -52,9 +57,23 @@ const O = TS.office, CAT = {
   shelves: { grid: TS.shop.shelf, dx: 0, dy: 1, collide: true }, vending: { grid: TS.shop.vending, dx: 0, dy: 1, collide: true },
   breaktable: { grid: O.breaktable, dx: 0, dy: 0, collide: true }, meetingtable: { grid: O.meetingtable, dx: 1, dy: 0, collide: true },
   printer: { id: O.printer }, cabinet: { id: O.cabinet }, cooler: { id: O.cooler }, coffee: { id: O.coffee }, boxes: { id: O.boxes }, fridge: { id: O.fridge }, microwave: { id: O.microwave },
-  shredder: { id: O.shredder }, mailcart: { id: O.mailcart }, rack: { id: O.rack }, chair: { id: O.chair }, bookshelf: { id: O.bookshelf }, flipchart: { id: O.flipchart }, plant: { id: TS.plant }, totes: { id: TS.shop.totes }
+  shredder: { id: O.shredder }, mailcart: { id: O.mailcart }, rack: { id: O.rack }, chair: { id: O.chair }, bookshelf: { id: O.bookshelf }, flipchart: { id: O.flipchart }, plant: { id: TS.plant }, totes: { id: TS.shop.totes },
+  /* the street */
+  lamppost: { grid: TS.street.lamppost, dx: 1, dy: 0, collide: "base" }, tree: { grid: TS.street.tree, dx: 1, dy: 0, collide: "base" },
+  phonebox: { grid: TS.street.phonebox, dx: 1, dy: 0, collide: "base" }, busstop: { grid: TS.street.busstop, dx: 0, dy: 0, collide: "base" },
+  car: { grid: TS.street.car, dx: 0, dy: 1, collide: true }, postbox: { id: TS.street.postbox }, bin: { id: TS.street.bin }, planter: { id: TS.street.planter },
+  /* the waiting room */
+  chairrow: { grid: TS.waiting.chairrow, dx: 0, dy: 1, collide: true }, ticketmachine: { id: TS.waiting.ticketmachine }, magtable: { id: TS.waiting.magtable },
+  /* the memory wing */
+  cardcat: { grid: TS.memory.cardcat, dx: 0, dy: 1, collide: true }, atlastable: { grid: TS.memory.atlastable, dx: 0, dy: 1, collide: true },
+  globe: { id: TS.memory.globe }, phoneshelf: { id: TS.memory.phoneshelf },
+  /* the verification desk */
+  idbooth: { grid: TS.verify.idbooth, dx: 0, dy: 1, collide: true }, queuebarrier: { grid: TS.verify.queuebarrier, dx: 0, dy: 1, collide: true }, scanner: { id: TS.verify.scanner },
+  /* the off switch gallery */
+  bigbutton: { grid: TS.offswitch.bigbutton, dx: 0, dy: 1, collide: true }, caged: { id: TS.offswitch.caged }
 };
-const WALLCAT = { whiteboard: O.whiteboard, pigeonholes: O.pigeonholes, bulletin: O.bulletin, screen: O.screen, window: O.window, clock: O.clock };
+const WALLCAT = { whiteboard: O.whiteboard, pigeonholes: O.pigeonholes, bulletin: O.bulletin, screen: O.screen, window: O.window, clock: O.clock,
+  nowserving: TS.waiting.nowserving, switchbank: TS.offswitch.switchbank, cctv: TS.verify.cctv };
 
 function buildMap(R) {
   const ox = R.bounds.x0 - 1, oy = R.bounds.y0 - 1, CW = R.bounds.x1 - R.bounds.x0 + 3, CH = R.bounds.y1 - R.bounds.y0 + 3, W = CW * S, H = CH * S;
@@ -138,6 +157,46 @@ function buildMap(R) {
   }
   if (R.key === "core") { block(L.start, 19, 33, TS.T.START); area("old-office-viewing-gallery", 8, 28, [prop("silent", true)], 5, 7); }
 
+  /* signage: at every door, a board naming what is through it, and one naming where you have arrived */
+  const signedCells = new Set();
+  function signAt(near, awayFrom, zoneKey) {
+    const board = TS.bigSigns[zoneKey]; if (!board) return;
+    const dx = Math.sign(near.x - awayFrom.x), dy = Math.sign(near.y - awayFrom.y);
+    const perp = dx ? [[0, 1], [0, -1]] : [[1, 0], [-1, 0]];
+    for (const [px2, py2] of perp) for (const step of [0, 1]) {
+      const wx = near.x + px2 + dx * step, wy = near.y + py2 + dy * step;
+      if (!own(wx, wy) || cell(wx, wy) !== "#" || signedCells.has(wx + "," + wy)) continue;
+      let touches = false;
+      for (const [ax, ay] of DIRS) if (walkable(wx + ax, wy + ay)) touches = true;
+      if (!touches) continue;
+      const [tx, ty] = tile(wx, wy);
+      grid(L.walls, board, tx, ty + 1);
+      signedCells.add(wx + "," + wy);
+      return;
+    }
+  }
+  for (const l of myLinks) {
+    signAt(l.mine, l.theirs, l.theirs.region === "core" ? "foyer" : l.theirs.region);   /* where this door goes */
+    if (R.key !== "core") signAt(l.mine, l.theirs, R.key);                              /* and where you now are */
+  }
+  if (R.key === "core") {
+    let best = null;
+    for (let cy = 28; cy <= 36; cy++) for (let cx = 12; cx <= 27; cx++) {
+      if (!own(cx, cy) || cell(cx, cy) !== "#" || signedCells.has(cx + "," + cy)) continue;
+      if (!DIRS.some(([ax, ay]) => walkable(cx + ax, cy + ay))) continue;
+      const d = Math.hypot(cx - 19, cy - 33);
+      if (!best || d < best.d) best = { cx, cy, d };
+    }
+    if (best) {
+      const [tx, ty] = tile(best.cx, best.cy);
+      grid(L.walls, TS.directoryBoard, tx, ty + 1);
+      signedCells.add(best.cx + "," + best.cy);
+      const f = DIRS.map(([ax, ay]) => [best.cx + ax, best.cy + ay]).find(([ax, ay]) => walkable(ax, ay));
+      if (f) area("museum-directory", f[0], f[1], [prop("openWebsite", BASE + "/placards/index.html"), prop("openWebsiteTrigger", "onaction"),
+        prop("openWebsiteTriggerMessage", "Press SPACE for the museum directory"), prop("openWebsiteWidth", 44), prop("openWebsiteAllowApi", true)]);
+    }
+  }
+
   /* ---------- furniture: the core's own, or the room module's ---------- */
   const propCells = new Set();
   const PROPS = R.key === "core" ? CORE_PROPS : (R.def ? R.def.props.map(([x, y, w, v]) => [x + R.bounds.x0, y + R.bounds.y0, w, v]) : []);
@@ -148,7 +207,7 @@ function buildMap(R) {
     if (c.id !== undefined) { set(L.props, tx + 1, ty + 1, c.id); if (c.collide !== false) set(L.collisions, tx + 1, ty + 1, TS.T.COLLIDE); continue; }
     const g = typeof c.grid === "function" ? c.grid(v) : c.grid;
     grid(L.props, g, tx + c.dx, ty + c.dy);
-    if (c.collide) g.forEach((row, j) => row.forEach((_, i) => set(L.collisions, tx + c.dx + i, ty + c.dy + j, TS.T.COLLIDE)));
+    if (c.collide) g.forEach((row, j) => row.forEach((_, i) => { if (c.collide !== "base" || j === g.length - 1) set(L.collisions, tx + c.dx + i, ty + c.dy + j, TS.T.COLLIDE); }));
     if (g[0].length > 3) propCells.add((cx + 1) + "," + cy);
   }
   for (const [cx, cy, what] of WALLS) {
@@ -161,17 +220,17 @@ function buildMap(R) {
   const floorCells = [];
   for (let cy = R.bounds.y0; cy <= R.bounds.y1; cy++) for (let cx = R.bounds.x0; cx <= R.bounds.x1; cx++) if (own(cx, cy) && isFloor(cx, cy)) floorCells.push([cx, cy]);
   const byZone = {}; for (const c of floorCells) (byZone[zoneOf(c[0], c[1])] = byZone[zoneOf(c[0], c[1])] || []).push(c);
-  const thresholdCells = new Set(), signAt = {};
+  const thresholdCells = new Set(), hallSign = {};
   for (const [cx, cy] of floorCells) for (const [dx, dy] of DIRS) {
     const nx = cx + dx, ny = cy + dy; if (!walkable(nx, ny) || !own(nx, ny)) continue;
     const za = zoneOf(cx, cy), zb = zoneOf(nx, ny); if (za === zb) continue;
     const [tx, ty] = tile(cx, cy), dir = dy === -1 ? "N" : dy === 1 ? "S" : dx === -1 ? "W" : "E";
     if (za > zb) grid(L.decor, TS.THRESH[dir], dir === "S" ? tx : dir === "E" ? tx + 2 : tx, dir === "S" ? ty + 2 : dir === "E" ? ty : ty);
     thresholdCells.add(cx + "," + cy);
-    if (!signAt[za]) { const perp = dy !== 0 ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]]; for (const [px2, py2] of perp) { const wx = cx + px2, wy = cy + py2; if (own(wx, wy) && cell(wx, wy) === "#") { signAt[za] = [wx, wy]; break; } } }
+    if (!hallSign[za]) { const perp = dy !== 0 ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]]; for (const [px2, py2] of perp) { const wx = cx + px2, wy = cy + py2; if (own(wx, wy) && cell(wx, wy) === "#") { hallSign[za] = [wx, wy]; break; } } }
   }
-  for (const z in signAt) if (TS.signs[z]) { const [tx, ty] = tile(...signAt[z]); grid(L.walls, TS.signs[z], tx, ty + 1); }
-  const busy = new Set([...facingCells, ...thresholdCells, ...doorCells, ...propCells]);
+  for (const z in hallSign) if (TS.signs[z]) { const [tx, ty] = tile(...hallSign[z]); grid(L.walls, TS.signs[z], tx, ty + 1); }
+  const busy = new Set([...facingCells, ...thresholdCells, ...doorCells, ...propCells, ...signedCells]);
   const furnished = PROPS.length > 0 && R.key !== "core";
   for (const l of myLinks) for (const [dx, dy] of DIRS) busy.add((l.mine.x + dx) + "," + (l.mine.y + dy));
   const allAround = (cx, cy) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!walkable(cx + i, cy + j)) return false; return true; };

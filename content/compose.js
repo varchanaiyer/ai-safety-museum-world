@@ -75,12 +75,14 @@
     for (const parent of parents) {
       for (const side of sides) {
         const cands = [];
+        /* a room may start anywhere along the parent's edge and overhang it,
+           so a wide room can still hang off a narrow one */
         if (side === "S") {
           const ry = parent.y1;
-          for (let rx = Math.max(0, parent.x0); rx <= parent.x1 - rw + 1; rx++) cands.push([rx, ry]);
+          for (let rx = Math.max(0, parent.x0); rx <= parent.x1; rx++) cands.push([rx, ry]);
         } else {
           const rx = parent.x1;
-          for (let ry = Math.max(0, parent.y0); ry <= parent.y1 - rh + 1; ry++) cands.push([rx, ry]);
+          for (let ry = Math.max(0, parent.y0); ry <= parent.y1; ry++) cands.push([rx, ry]);
         }
         for (const [rx, ry] of cands) {
           const rect = { x0: rx, y0: ry, x1: rx + rw - 1, y1: ry + rh - 1 };

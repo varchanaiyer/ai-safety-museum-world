@@ -1,4 +1,4 @@
-/* THE OFFICE FLOOR — the pre-AI workplace you can walk through.
+/* THE OFFICE FLOOR · the pre-AI workplace you can walk through.
    A reception, the open plan, a print room, the break room, a meeting
    room, the corner office, the server closet, the mailroom, a suggestion
    box, and the stationery cupboard. The Old Office off the Foyer is the
@@ -12,7 +12,7 @@ ROOM("officefloor", {
     "####A#######B#######C#####",
     "#........#.....#.........#",
     "M........J.....#.........K",
-    "#........#.....#.........#",
+    "L........#.....#.........#",
     "####.#####.#######.#######",
     "#........................#",
     "####.##D######.#####.#####",
@@ -66,6 +66,14 @@ ROOM("officefloor", {
     [7, 0, "bulletin"], [2, 0, "clock"], [16, 6, "whiteboard"], [21, 6, "screen"], [21, 9, "window"], [10, 12, "pigeonholes"], [6, 4, "clock"]
   ],
   exhibits: {
+    L: { t: "A Working Exhibit",
+      obj: "A signboard at the entrance, hand-lettered, with a smaller line underneath that people usually miss.",
+      body: [
+        "You may work in here. The desks are real, the chairs are real, and anyone who wanders in can sit down and get on with something. This floor is the museum's coworking space, kept in the style of the workplace that existed before machine intelligence did the middle of the job.",
+        "The smaller line says the rest: while you are inside, you are part of the exhibition. Visitors will walk past and look at you working, exactly as they look at the desks, the printer and the pigeonholes. The curators consider this the most honest room in the building. Everywhere else the museum shows you the past. Here it shows you the present, and the present is a person at a desk, watched."
+      ],
+      q: "“Please do not feed the workers.” · Notice, removed by staff, twice"
+    },
     A: { t: "The Sign-In Book", obj: "A visitors' book, ballpoint on a string. Last entry 4:12 pm.",
       body: ["Every visitor to the old office wrote their name in a book at the front desk, by hand, and was given a badge that said VISITOR in letters large enough to read across a room. The book knew who was in the building. Nobody ever read it, except once, after the fire drill.",
         "Reception was the building's face and its firewall. A person at a desk decided who came in, took messages on pink slips, and knew everyone's extension by heart. When the badge printer jammed, the organisation was, briefly, secure."] },

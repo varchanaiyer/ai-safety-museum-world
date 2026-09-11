@@ -52,6 +52,11 @@ const CONTENT_FILES = [
   "rooms/the-midway/room.js",
   "rooms/the-workbench/room.js",
   "rooms/the-office-floor/room.js",
+  "rooms/the-high-street/room.js",
+  "rooms/the-waiting-room/room.js",
+  "rooms/the-memory-wing/room.js",
+  "rooms/the-verification-desk/room.js",
+  "rooms/the-off-switch-gallery/room.js",
   "exhibits/last-room/the-unfinished-exhibit.js",
   "content/compose.js",
 ];
