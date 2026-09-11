@@ -80,7 +80,7 @@ for (const e of list) {
   <div class="num">Exhibit Nº ${String(e.n).padStart(2, "0")} of ${M.total}</div>
   <h1>${esc(e.t)}</h1>
   <div class="obj"><b>In the case</b>${esc(e.obj)}</div>
-  <img class="plate" src="../art/${e.folder}/${e.slug}.png" alt="${esc(e.obj)}" width="480" height="270">
+  <img class="plate" src="../art/${e.folder}/${e.slug}.png" alt="${esc(e.obj)}" width="640" height="400">
   ${e.body.map(p => "<p>" + esc(p) + "</p>").join("")}
   ${e.q ? "<blockquote>" + esc(e.q) + "</blockquote>" : ""}
   ${link}

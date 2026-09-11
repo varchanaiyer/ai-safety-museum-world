@@ -1,31 +1,47 @@
 #!/usr/bin/env node
 /* One plate per exhibit for the placard pages: the object from "in the
-   case" photographed under glass, or the painting itself for art exhibits.
-   Writes placards/art/<folder>/<slug>.png. Run after build-placards. */
+   case" lit and photographed under glass, or the painting itself for the
+   art exhibits. Writes placards/art/<folder>/<slug>.png. */
 "use strict";
 const fs = require("fs"), path = require("path");
 const { Sprite, encodePNG, font } = require("./paint.cjs");
 const scenes = require("./scenes.cjs");
-const GOLD = "#e9b949", CARD = "#141318";
+const GOLD = "#e9b949", CARD = "#141318", INK_DIM = "#9a927e";
+const W = 640, H = 400;
+
 module.exports = function plates(M, TS) {
-  const W = 480, H = 270, root = path.join(__dirname, "..", "placards", "art");
+  const root = path.join(__dirname, "..", "placards", "art");
   let n = 0;
   for (const ch in M.exhibits) {
     const ex = M.exhibits[ch], s = new Sprite(W, H), col = ex.color || GOLD;
     if ((ex.art || ex.mural) && scenes[ch]) {
-      s.gradient(0, 0, W, H, "#2a2420", "#181410"); s.radial(W / 2, H / 2, 300, "#ffefc8", 40);
-      s.rect(22, 18, W - 44, H - 36, "#000000", 120).rect(18, 14, W - 36, H - 28, "#7a6030").rect(24, 20, W - 48, H - 40, "#baa060").rect(30, 26, W - 60, H - 52, "#5e4a24");
-      scenes[ch](s, 36, 32, W - 72, H - 64);
-      for (const [x, y] of [[18, 14], [W - 18, 14], [18, H - 14], [W - 18, H - 14]]) s.circle(x, y, 6, "#ceaa60");
+      /* a painting, hung and lit */
+      s.gradient(0, 0, W, H, "#2c2620", "#181310");
+      s.radial(W / 2, 30, 460, "#ffefc8", 60);
+      const fx = 26, fy = 22, fw = W - 52, fh = H - 44;
+      s.rect(fx + 8, fy + 10, fw, fh, "#000000", 120);
+      s.rect(fx, fy, fw, fh, "#7a6030"); s.rect(fx + 8, fy + 8, fw - 16, fh - 16, "#c8aa64"); s.rect(fx + 18, fy + 18, fw - 36, fh - 36, "#5e4a24");
+      scenes[ch](s, fx + 26, fy + 26, fw - 52, fh - 52);
+      s.rect(fx + 26, fy + 26, fw - 52, 40, "#ffffff", 16);
+      for (const [px, py] of [[fx + 8, fy + 8], [fx + fw - 8, fy + 8], [fx + 8, fy + fh - 8], [fx + fw - 8, fy + fh - 8]]) s.circle(px, py, 8, "#dcc07c");
     } else {
-      s.gradient(0, 0, W, H, "#1c1b21", "#0b0b0e"); s.radial(W / 2, 96, 260, "#ffefc8", 60);
-      s.rect(0, 200, W, 70, "#26232c"); s.rect(0, 200, W, 2, GOLD, 120);
-      s.rect(62, 214, W - 124, 30, "#000000", 90).rect(60, 60, W - 120, 152, "#0e1a26").rect(60, 60, W - 120, 152, "#7ec3e8", 34).frame(60, 60, W - 120, 152, GOLD, 220).frame(62, 62, W - 124, 148, "#cde4f5", 60);
-      TS.art[TS.kiosks[ch].kind](s, W / 2, 140, 5, col);
-      s.rect(60, 60, W - 120, 152, "#cde4f5", 14); s.line(70, 200, 150, 70, "#ffffff", 50); s.line(76, 200, 156, 70, "#ffffff", 30);
-      s.rect(W / 2 - 70, 222, 140, 26, CARD).frame(W / 2 - 70, 222, 140, 26, GOLD, 220);
-      s.text(W / 2, 226, "EXHIBIT Nº " + String(ex.n).padStart(2, "0"), { scale: 2, align: "center", color: GOLD });
-      s.rect(W / 2 - 20, 250, 40, 2, col);
+      /* an object, in a case, on a plinth */
+      s.gradient(0, 0, W, H, "#262430", "#101017");
+      s.radial(W / 2, 20, 480, "#ffefc8", 70);
+      s.rect(0, 316, W, H - 316, "#2e2b36"); s.rect(0, 316, W, 3, GOLD, 150); s.rect(0, 322, W, 2, "#000000", 60);
+      const cx = 54, cy = 34, cw = W - 108, chh = 268;
+      s.rect(cx + 10, cy + 12, cw, chh, "#000000", 120);
+      s.gradient(cx, cy, cw, chh, "#1d2b39", "#0f1a24");
+      s.radial(W / 2, cy + 46, 300, "#cfe6f5", 46);
+      s.radial(W / 2, cy + chh - 26, 220, "#000000", 70);
+      TS.art[TS.kiosks[ch].kind](s, W / 2, cy + chh / 2 - 12, 10, col);
+      s.ellipse(W / 2, cy + chh - 30, 120, 16, "#000000", 70);          /* the object's shadow on the case floor */
+      s.rect(cx, cy, cw, chh, "#cfe6f5", 16);                            /* glass */
+      for (let i = 0; i < 5; i++) s.line(cx + 26 + i, cy + chh - 14, cx + 170 + i, cy + 10, "#ffffff", 55 - i * 8);
+      s.frame(cx, cy, cw, chh, GOLD, 240); s.frame(cx + 1, cy + 1, cw - 2, chh - 2, GOLD, 140); s.frame(cx + 5, cy + 5, cw - 10, chh - 10, "#cde4f5", 70);
+      s.rect(W / 2 - 108, 332, 216, 44, CARD); s.frame(W / 2 - 108, 332, 216, 44, GOLD, 230); s.frame(W / 2 - 105, 335, 210, 38, GOLD, 80);
+      s.text(W / 2, 342, "EXHIBIT Nº " + String(ex.n).padStart(2, "0"), { scale: 3, align: "center", color: GOLD });
+      s.rect(W / 2 - 90, 384, 180, 3, col);
     }
     const dir = path.join(root, ex.folder); fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, ex.slug + ".png"), encodePNG(s.px, W, H)); n++;
@@ -34,5 +50,5 @@ module.exports = function plates(M, TS) {
 };
 if (require.main === module) {
   const M = require("./exhibits-index.cjs")(); const TS = require("./tileset.cjs")(M);
-  console.log("plates:", module.exports(M, TS));
+  console.log("plates:", module.exports(M, TS), "at " + W + "x" + H);
 }
