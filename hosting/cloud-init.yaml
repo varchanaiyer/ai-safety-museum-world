@@ -1,0 +1,47 @@
+#cloud-config
+# First boot of the museum's WorkAdventure server. provision.sh fills in the
+# __PLACEHOLDERS__ and hands this to Hetzner; the server then installs Docker,
+# downloads WorkAdventure's official Compose deployment at a pinned release,
+# writes its .env, starts it, and closes every port except SSH, HTTP, HTTPS.
+package_update: true
+packages: [curl, ca-certificates, ufw, openssl]
+write_files:
+  - path: /opt/workadventure/setup.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      DOMAIN="__DOMAIN__"
+      ACME_EMAIL="__ACME_EMAIL__"
+      START_ROOM_URL="__START_ROOM_URL__"
+      VERSION="__VERSION__"
+      exec > >(tee -a /opt/workadventure/setup.log) 2>&1
+      echo "== $(date) installing docker"
+      curl -fsSL https://get.docker.com | sh
+      cd /opt/workadventure
+      echo "== downloading WorkAdventure ${VERSION}"
+      curl -fsSL -o docker-compose.yaml "https://raw.githubusercontent.com/workadventure/workadventure/${VERSION}/contrib/docker/docker-compose.prod.yaml"
+      curl -fsSL -o .env "https://raw.githubusercontent.com/workadventure/workadventure/${VERSION}/contrib/docker/.env.prod.template"
+      set_var() { local k="$1" v="$2"; if grep -qE "^#?[[:space:]]*${k}=" .env; then sed -i -E "s|^#?[[:space:]]*${k}=.*|${k}=${v}|" .env; else printf '%s=%s\n' "$k" "$v" >> .env; fi; }
+      set_var SECRET_KEY "$(openssl rand -hex 32)"
+      set_var ADMIN_API_TOKEN "$(openssl rand -hex 24)"
+      set_var DOMAIN "$DOMAIN"
+      set_var START_ROOM_URL "$START_ROOM_URL"
+      set_var ACME_EMAIL "$ACME_EMAIL"
+      set_var VERSION "$VERSION"
+      set_var TZ "Europe/Berlin"
+      set_var STUN_SERVER "stun:stun.l.google.com:19302"
+      set_var CONTACT_URL "https://aisafety.museum/"
+      set_var MAP_STORAGE_AUTHENTICATION_USER "curator"
+      set_var MAP_STORAGE_AUTHENTICATION_PASSWORD "$(openssl rand -hex 16)"
+      chmod 600 .env
+      echo "== starting"
+      docker compose up -d
+      echo "== firewall"
+      ufw allow OpenSSH
+      ufw allow 80/tcp
+      ufw allow 443/tcp
+      ufw --force enable
+      echo "== done $(date). Play at https://${DOMAIN}${START_ROOM_URL} once DNS points here."
+runcmd:
+  - [bash, /opt/workadventure/setup.sh]

@@ -51,6 +51,7 @@ const CONTENT_FILES = [
   "rooms/hall-of-mirrors/room.js",
   "rooms/the-midway/room.js",
   "rooms/the-workbench/room.js",
+  "rooms/the-office-floor/room.js",
   "exhibits/last-room/the-unfinished-exhibit.js",
   "content/compose.js",
 ];

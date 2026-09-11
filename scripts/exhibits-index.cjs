@@ -22,7 +22,7 @@ module.exports = function loadMuseum(root) {
     const m = fs.readFileSync(path.join(root, f), "utf8").match(/EXHIBIT\("(.)"/);
     if (m) fileOf[m[1]] = f;
   }
-  const rooms = vm.runInContext("ROOMS.map(r => ({ key: r.key, name: r.name, color: r.color, map: r.map.slice(), exhibits: Object.keys(r.exhibits || {}) }))", ctx);
+  const rooms = vm.runInContext("ROOMS.map(r => ({ key: r.key, name: r.name, color: r.color, map: r.map.slice(), exhibits: Object.keys(r.exhibits || {}), props: r.props || [], wall: r.wall || [], floors: r.floors || null, floorKey: r.floorKey || {} }))", ctx);
   for (const f of files) if (f.endsWith("compose.js")) run(f);
   const composed = vm.runInContext("({ MAP: MAP.slice(), MW, MH, ROOMRECTS: ROOMRECTS.slice(), HALLORDER: HALLORDER.slice() })", ctx);
   const EXHIBITS = vm.runInContext("EXHIBITS", ctx), ZONES = vm.runInContext("ZONES", ctx), WINGNAME = vm.runInContext("WINGNAME", ctx);
