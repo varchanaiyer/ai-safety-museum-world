@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-/* Renders a map to a PNG at a chosen scale so the dressing can be judged
-   without opening Tiled: node scripts/preview.cjs core [out.png] [divisor] */
+/* Renders a map to a PNG so the dressing can be judged without Tiled.
+   Reads the finished tileset from disk, so it shows every tile the
+   converter added: node scripts/preview.cjs core [out.png] [divisor] */
 "use strict";
 const fs = require("fs"), path = require("path");
-const { encodePNG, SIZE } = require("./paint.cjs");
-const M = require("./exhibits-index.cjs")(); const TS = require("./tileset.cjs")(M);
+const { encodePNG, decodePNG, SIZE } = require("./paint.cjs");
 const name = process.argv[2] || "core", D = +(process.argv[4] || 4);
 const map = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "maps", name + ".tmj"), "utf8"));
-const src = TS.atlas.pixels(), SW = TS.width, COLS = TS.cols;
+const ts = decodePNG(fs.readFileSync(path.join(__dirname, "..", "tilesets", "museum.png")));
+const src = ts.px, SW = ts.w, COLS = ts.w / SIZE;
 const W = map.width * SIZE / D | 0, H = map.height * SIZE / D | 0, out = Buffer.alloc(W * H * 4);
 for (let i = 0; i < W * H; i++) { out[i * 4] = 8; out[i * 4 + 1] = 8; out[i * 4 + 2] = 10; out[i * 4 + 3] = 255; }
 for (const l of map.layers) {

@@ -67,7 +67,7 @@ function page(title, body, ex) {
 <body><div class="card">${body}</div>${API(ex)}</body></html>`;
 }
 
-for (const f of fs.readdirSync(OUT, { withFileTypes: true }).filter(f => f.name !== "art")) fs.rmSync(path.join(OUT, f.name), { recursive: true, force: true });
+for (const f of fs.readdirSync(OUT, { withFileTypes: true }).filter(f => !["art", "map", "map.html"].includes(f.name))) fs.rmSync(path.join(OUT, f.name), { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
 let written = 0;
 for (const e of list) {
@@ -85,7 +85,7 @@ for (const e of list) {
   ${e.q ? "<blockquote>" + esc(e.q) + "</blockquote>" : ""}
   ${link}
   <div class="foot"><a href="${rel(prev)}">← ${esc(prev.t)}</a><span class="seen" id="seen"></span><a href="${rel(next)}">${esc(next.t)} →</a></div>
-  <div class="foot" style="border:0;margin-top:8px;padding-top:0"><a href="../index.html">Directory</a><a href="../join.html">Get involved</a></div>`;
+  <div class="foot" style="border:0;margin-top:8px;padding-top:0"><a href="../index.html">Directory</a><a href="../map.html">Floor plan</a><a href="../join.html">Get involved</a></div>`;
   const dir = path.join(OUT, e.folder); fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, e.slug + ".html"), page(e.t, body, e)); written++;
 }
@@ -93,7 +93,7 @@ for (const e of list) {
 /* the directory */
 {
   const order = M.composed.HALLORDER;
-  let body = `<div class="wingchip" style="color:var(--gold)">Museum directory</div><h1>All ${M.total} exhibits</h1><p class="num" style="margin-top:6px">Press SPACE at any placard on the wall, or read ahead here</p>`;
+  let body = `<div class="wingchip" style="color:var(--gold)">Museum directory</div><h1>All ${M.total} exhibits</h1><p class="num" style="margin-top:6px">Press SPACE at any placard on the wall, or read ahead here</p><a href="map.html"><img class="plate" src="map/museum.png" alt="Floor plan of the museum, every hall named"></a><p class="num" style="margin-top:8px"><a href="map.html" style="color:var(--gold)">Open the floor plan</a> · follow the coloured lines on the floor</p>`;
   for (const h of order) {
     const items = list.filter(e => e.wing === h); if (!items.length) continue;
     body += `<div class="hallhead" style="color:${esc((M.ZONES[h] || {}).color || "#e9b949")}">${esc((M.ZONES[h] || {}).name || h)}</div><div class="grid">` +

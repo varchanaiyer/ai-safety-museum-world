@@ -87,4 +87,20 @@ function encodePNG(px, W, H) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ihdr), chunk("IDAT", zlib.deflateSync(raw, { level: 9 })), chunk("IEND", Buffer.alloc(0))]);
 }
 
-module.exports = { Sprite, Atlas, font, hex, mulberry, encodePNG, SIZE };
+/* reads the 8-bit RGBA PNGs this toolkit writes */
+function decodePNG(buf) {
+  let p = 8, w = 0, h = 0; const idat = [];
+  while (p < buf.length) { const len = buf.readUInt32BE(p), type = buf.toString("ascii", p + 4, p + 8); if (type === "IHDR") { w = buf.readUInt32BE(p + 8); h = buf.readUInt32BE(p + 12); } if (type === "IDAT") idat.push(buf.slice(p + 8, p + 8 + len)); p += 12 + len; }
+  const raw = zlib.inflateSync(Buffer.concat(idat)), out = Buffer.alloc(w * h * 4); let prev = Buffer.alloc(w * 4);
+  for (let y = 0; y < h; y++) {
+    const ft = raw[y * (w * 4 + 1)], line = raw.subarray(y * (w * 4 + 1) + 1, (y + 1) * (w * 4 + 1)), cur = Buffer.alloc(w * 4);
+    for (let i = 0; i < w * 4; i++) {
+      const a = i >= 4 ? cur[i - 4] : 0, b = prev[i], c = i >= 4 ? prev[i - 4] : 0; let v = line[i];
+      if (ft === 1) v += a; else if (ft === 2) v += b; else if (ft === 3) v += (a + b) >> 1; else if (ft === 4) { const pp = a + b - c, pa = Math.abs(pp - a), pb = Math.abs(pp - b), pc = Math.abs(pp - c); v += (pa <= pb && pa <= pc) ? a : (pb <= pc ? b : c); }
+      cur[i] = v & 255;
+    }
+    cur.copy(out, y * w * 4); prev = cur;
+  }
+  return { w, h, px: out };
+}
+module.exports = { Sprite, Atlas, font, hex, mulberry, encodePNG, decodePNG, SIZE };

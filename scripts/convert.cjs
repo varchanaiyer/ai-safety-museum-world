@@ -75,10 +75,22 @@ const O = TS.office, CAT = {
 const WALLCAT = { whiteboard: O.whiteboard, pigeonholes: O.pigeonholes, bulletin: O.bulletin, screen: O.screen, window: O.window, clock: O.clock,
   nowserving: TS.waiting.nowserving, switchbank: TS.offswitch.switchbank, cctv: TS.verify.cctv };
 
+/* ---------- wayfinding: planned once for the whole building, every tile painted before any map is written ---------- */
+const SPAWN = [19, 33];
+const blocked = new Set(CORE_PROPS.map(([x, y]) => x + "," + y));
+for (const r of M.rooms) { const rect = rects.find(q => q.key === r.key); if (rect) for (const [x, y] of r.props) blocked.add((x + rect.x0) + "," + (y + rect.y0)); }
+const WAY = require("./wayfinding.cjs")(M, { spawn: SPAWN, blocked });
+const WFP = require("./wayfinding-paint.cjs")(TS, WAY, M);
+const LINE_ID = new Map(); for (const m of WAY.lineTiles.values()) for (const t of m.values()) LINE_ID.set(t, WFP.lineId(t));
+const SIGN_GRID = new Map(WAY.signposts.map(sp => [sp, WFP.signpostGrid(sp)]));
+const BOARD_GRID = new Map(WAY.boards.map(b => [b, WFP.boardGrid(b)]));
+TS.tileCount = TS.atlas.tiles.length; TS.height = TS.atlas.height; TS.width = TS.atlas.width; TS.cols = TS.atlas.cols;
+fs.writeFileSync(path.join(ROOT, "tilesets", "museum.png"), TS.atlas.png());
+
 function buildMap(R) {
   const ox = R.bounds.x0 - 1, oy = R.bounds.y0 - 1, CW = R.bounds.x1 - R.bounds.x0 + 3, CH = R.bounds.y1 - R.bounds.y0 + 3, W = CW * S, H = CH * S;
   const layer = () => new Array(W * H).fill(0);
-  const L = { floor: layer(), decor: layer(), props: layer(), walls: layer(), collisions: layer(), start: layer() }, zones = {};
+  const L = { floor: layer(), decor: layer(), wayfinding: layer(), signage: layer(), props: layer(), walls: layer(), collisions: layer(), start: layer() }, zones = {};
   const set = (arr, tx, ty, id) => { if (tx >= 0 && ty >= 0 && tx < W && ty < H) arr[ty * W + tx] = gid(id); };
   const grid = (arr, g, tx, ty) => g.forEach((row, j) => row.forEach((id, i) => set(arr, tx + i, ty + j, id)));
   const tile = (cx, cy) => [(cx - ox) * S, (cy - oy) * S];
@@ -152,8 +164,11 @@ function buildMap(R) {
   for (const l of myLinks) {
     const other = regions[l.theirs.region];
     area("to-" + other.key, l.theirs.x, l.theirs.y, [prop("exitUrl", other.file + "#from-" + R.key)]);
-    area("from-" + other.key, l.mine.x, l.mine.y, [prop("start", true)]);
-    if (R.key !== "core") block(L.start, l.mine.x, l.mine.y, TS.T.START);
+    /* arrive one cell clear of the exit, or visitors land on the mat and bounce straight back */
+    const ax = l.mine.x + (l.mine.x - l.theirs.x), ay = l.mine.y + (l.mine.y - l.theirs.y);
+    const arrive = walkable(ax, ay) && own(ax, ay) ? [ax, ay] : [l.mine.x, l.mine.y];
+    area("from-" + other.key, arrive[0], arrive[1], [prop("start", true)]);
+    if (R.key !== "core") block(L.start, arrive[0], arrive[1], TS.T.START);
   }
   if (R.key === "core") { block(L.start, 19, 33, TS.T.START); area("old-office-viewing-gallery", 8, 28, [prop("silent", true)], 5, 7); }
 
@@ -197,6 +212,37 @@ function buildMap(R) {
     }
   }
 
+  /* "you are here" map boards on a wall near each hall's first signpost */
+  const frontUsed = new Set();
+  for (const o of objects) frontUsed.add(Math.round(o.x / PX + ox) + "," + Math.round(o.y / PX + oy));
+  for (const b of WAY.boards) {
+    if (b.region !== R.key) continue;
+    let best = null;
+    for (let cy = b.at[1] - 6; cy <= b.at[1] + 6; cy++) for (let cx = b.at[0] - 6; cx <= b.at[0] + 6; cx++) {
+      if (!own(cx, cy) || cell(cx, cy) !== "#" || signedCells.has(cx + "," + cy)) continue;
+      const front = DIRS.map(([ax, ay]) => [cx + ax, cy + ay]).find(([fx, fy]) => walkable(fx, fy) && !isDoor(fx, fy) && !facingCells.has(fx + "," + fy) && !frontUsed.has(fx + "," + fy));
+      if (!front) continue;
+      const d = Math.hypot(cx - b.at[0], cy - b.at[1]);
+      if (!best || d < best.d) best = { cx, cy, front, d };
+    }
+    if (!best) { console.warn("no wall for map board", b.id); continue; }
+    const [tx, ty] = tile(best.cx, best.cy);
+    grid(L.walls, BOARD_GRID.get(b), tx, ty + 1);
+    signedCells.add(best.cx + "," + best.cy); frontUsed.add(best.front.join(","));
+    area("map-board-" + b.id, best.front[0], best.front[1], [prop("openWebsite", BASE + "/placards/map.html?at=" + b.id), prop("openWebsiteTrigger", "onaction"),
+      prop("openWebsiteTriggerMessage", "Press SPACE for the museum map · you are here"), prop("openWebsiteWidth", 60), prop("openWebsiteAllowApi", true)]);
+  }
+
+  /* coloured route lines and floor signposts */
+  for (let cy = R.bounds.y0 - 1; cy <= R.bounds.y1 + 1; cy++) for (let cx = R.bounds.x0 - 1; cx <= R.bounds.x1 + 1; cx++) {
+    if (!walkable(cx, cy)) continue;
+    const m = WAY.lineTiles.get(cx + "," + cy); if (!m) continue;
+    const [tx, ty] = tile(cx, cy);
+    for (const t of m.values()) set(L.wayfinding, tx + t.tx, ty + t.ty, LINE_ID.get(t));
+  }
+  const signCells = new Set();
+  for (const sp of WAY.signposts) { if (sp.region !== R.key) continue; grid(L.signage, SIGN_GRID.get(sp), ...tile(sp.at[0], sp.at[1])); signCells.add(sp.at.join(",")); }
+
   /* ---------- furniture: the core's own, or the room module's ---------- */
   const propCells = new Set();
   const PROPS = R.key === "core" ? CORE_PROPS : (R.def ? R.def.props.map(([x, y, w, v]) => [x + R.bounds.x0, y + R.bounds.y0, w, v]) : []);
@@ -227,10 +273,10 @@ function buildMap(R) {
     const [tx, ty] = tile(cx, cy), dir = dy === -1 ? "N" : dy === 1 ? "S" : dx === -1 ? "W" : "E";
     if (za > zb) grid(L.decor, TS.THRESH[dir], dir === "S" ? tx : dir === "E" ? tx + 2 : tx, dir === "S" ? ty + 2 : dir === "E" ? ty : ty);
     thresholdCells.add(cx + "," + cy);
-    if (!hallSign[za]) { const perp = dy !== 0 ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]]; for (const [px2, py2] of perp) { const wx = cx + px2, wy = cy + py2; if (own(wx, wy) && cell(wx, wy) === "#") { hallSign[za] = [wx, wy]; break; } } }
+    if (!hallSign[za]) { const perp = dy !== 0 ? [[1, 0], [-1, 0]] : [[0, 1], [0, -1]]; for (const [px2, py2] of perp) { const wx = cx + px2, wy = cy + py2; if (own(wx, wy) && cell(wx, wy) === "#" && !signedCells.has(wx + "," + wy)) { hallSign[za] = [wx, wy]; break; } } }
   }
   for (const z in hallSign) if (TS.signs[z]) { const [tx, ty] = tile(...hallSign[z]); grid(L.walls, TS.signs[z], tx, ty + 1); }
-  const busy = new Set([...facingCells, ...thresholdCells, ...doorCells, ...propCells, ...signedCells]);
+  const busy = new Set([...facingCells, ...thresholdCells, ...doorCells, ...propCells, ...signedCells, ...WAY.routeCells, ...signCells]);
   const furnished = PROPS.length > 0 && R.key !== "core";
   for (const l of myLinks) for (const [dx, dy] of DIRS) busy.add((l.mine.x + dx) + "," + (l.mine.y + dy));
   const allAround = (cx, cy) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!walkable(cx + i, cy + j)) return false; return true; };
@@ -257,7 +303,7 @@ function buildMap(R) {
   }
   let lid = 1;
   const tl = (name, data) => ({ id: lid++, name, type: "tilelayer", visible: true, opacity: 1, x: 0, y: 0, width: W, height: H, data });
-  const layers = [tl("floor", L.floor), tl("decor", L.decor), tl("props", L.props), tl("walls", L.walls), tl("collisions", L.collisions)];
+  const layers = [tl("floor", L.floor), tl("decor", L.decor), tl("wayfinding", L.wayfinding), tl("signage", L.signage), tl("props", L.props), tl("walls", L.walls), tl("collisions", L.collisions)];
   for (const z of Object.keys(zones).sort()) layers.push(tl("zone-" + z, zones[z]));
   layers.push(tl("start", L.start));
   layers.push({ id: lid++, name: "floorLayer", type: "objectgroup", draworder: "topdown", visible: true, opacity: 1, x: 0, y: 0, objects });
@@ -271,5 +317,7 @@ const summary = [];
 for (const key of Object.keys(regions)) { const R = regions[key], out = buildMap(R); fs.writeFileSync(path.join(ROOT, "maps", R.file), JSON.stringify(out.map)); summary.push({ file: R.file, tiles: out.W + "x" + out.H, exhibits: out.exhibitsHere, exits: out.exits.join(","), objects: out.objects }); }
 const halls = {}; for (const k in M.ZONES) halls[k] = M.ZONES[k].name;
 fs.mkdirSync(path.join(ROOT, "src"), { recursive: true }); fs.writeFileSync(path.join(ROOT, "src", "halls.json"), JSON.stringify(halls, null, 2));
+const FP = require("./floorplan.cjs")(M, WAY, path.join(ROOT, "placards"), SPAWN);
 console.table(summary);
+console.log("wayfinding:", WAY.routeCells.size, "route cells ·", WAY.signposts.length, "floor signposts ·", WAY.boards.length, "map boards · floor plans", FP.size);
 console.log("exhibit areas total:", summary.reduce((a, s) => a + s.exhibits, 0), "of", M.total, "· tiles in set:", TS.tileCount, "· placards base:", BASE);

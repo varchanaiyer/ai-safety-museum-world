@@ -12,7 +12,7 @@ const scenes = require("./scenes.cjs");
 const GOLD = "#e9b949", GOLD_DIM = "#96793c", INK = "#ece5d3", INK_DIM = "#9a927e", CARD = "#141318";
 
 module.exports = function buildTileset(M) {
-  const A = new Atlas(16);
+  const A = new Atlas(32);   /* wide, so the source image stays well under GPU texture limits */
   const T = {};
   const blank = () => new Sprite(SIZE, SIZE);
   T.EMPTY = A.one(blank()); T.COLLIDE = A.one(blank()); T.ZONE = A.one(blank()); T.START = A.one(blank());
@@ -355,9 +355,6 @@ module.exports = function buildTileset(M) {
     names.forEach((n, i) => { s.text(14, 39 + i * 4.2, n, { color: INK_DIM }); s.rect(78, 40 + i * 4.2, 4, 1, GOLD, 160); });
     s.text(48, 56, "PRESS SPACE", { align: "center", color: INK }); return A.add(s); })();
   const wayArrow = (() => { const s = new Sprite(32, 32); s.rect(2, 10, 28, 12, CARD).frame(2, 10, 28, 12, GOLD, 200); for (let i = 0; i < 6; i++) s.rect(20 + i, 16 - i, 1, 1 + i * 2, GOLD); s.rect(8, 15, 12, 2, GOLD); return A.one(s); })();
-  const png = A.png();
-  const out = path.join(__dirname, "..", "tilesets", "museum.png");
-  fs.writeFileSync(out, png);
   return { atlas: A, T, floors, wallFaces, kiosks, signs, banner, shopSign, art: ART, LIGHT, LIGHT_SOFT, SHADOW, THRESH, bench, plant, stanchion, visitors, visitorsFront,
     office: { desks, printer, copier, cabinet, cooler, coffee, boxes, partition, whiteboard, clock, fridge, microwave, chair, breaktable, meetingtable, bookshelf, rack, shredder, mailcart, flipchart, reception, pigeonholes, bulletin, screen, window: windowDusk },
     shop: { counter, totes, shelf, vending }, floorStyles, bigSigns, directoryBoard, wayArrow,
@@ -371,5 +368,6 @@ module.exports = function buildTileset(M) {
 if (require.main === module) {
   const M = require("./exhibits-index.cjs")();
   const t = module.exports(M);
+  fs.writeFileSync(path.join(__dirname, "..", "tilesets", "museum.png"), t.atlas.png());   /* only when run on its own; convert.cjs writes the final image with wayfinding tiles */
   console.log("wrote tilesets/museum.png", t.width + "x" + t.height, t.tileCount, "tiles");
 }

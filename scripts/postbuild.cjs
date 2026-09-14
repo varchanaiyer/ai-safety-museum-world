@@ -4,7 +4,7 @@
 "use strict";
 const fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, ".."), DIST = path.join(ROOT, "dist");
-fs.cpSync(path.join(ROOT, "placards"), path.join(DIST, "placards"), { recursive: true });
+fs.cpSync(path.join(ROOT, "placards"), path.join(DIST, "placards"), { recursive: true, filter: src => !/ \d+\.[A-Za-z0-9]+$/.test(src) });   /* skip iCloud conflict copies ("name 2.html") */
 const base = (process.env.PLACARDS_BASE || (fs.readFileSync(path.join(ROOT, ".env"), "utf8").match(/^PLACARDS_BASE=(.*)$/m) || [])[1] || "https://world.aisafety.museum").trim().replace(/\/$/, "");
 const host = base.replace(/^https?:\/\//, "");
 const play = `https://play.workadventu.re/_/global/${host}/maps/core.tmj`;

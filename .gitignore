@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .env.secret
 dist.zip
+
+# iCloud Drive conflict copies of generated files ("name 2.html")
+* [0-9].*
+* [0-9][0-9].*

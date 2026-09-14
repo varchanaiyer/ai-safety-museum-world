@@ -19,6 +19,17 @@ npm run dev                   # serves the maps; open the address it prints
 npm run buildmap              # validates and optimises into dist/
 ```
 
+## Finding your way
+
+Wayfinding is generated with the maps, from the same floor plan:
+
+- **Lines on the floor.** Three coloured routes start at the Foyer arrival point: gold to the south wings (Workbench through the Off Switch Gallery), cyan to the New Wing, Arcade and Hall of Mirrors, pink to the Midway. Chevrons along each line show the direction of travel.
+- **Floor signposts.** At the arrival point, inside every door, and on every boundary between halls, a plaque on the floor lists the nearest halls in each direction.
+- **Map boards.** Each hall has a "you are here" board on a wall. Press SPACE in front of it for the full floor plan with a pin where you stand.
+- **Museum map button.** The action bar has a Museum map button that opens the same plan, pinned to the hall you are in.
+
+`scripts/wayfinding.cjs` decides where everything goes, `scripts/wayfinding-paint.cjs` draws the tiles, and `scripts/floorplan.cjs` writes `placards/map.html` and one plan per board. Routes are listed at the top of `wayfinding.cjs`; add a route there and rebuild.
+
 | Folder | What lives there |
 | --- | --- |
 | `maps/` | one Tiled map per region: `core.tmj` and one per wing |
