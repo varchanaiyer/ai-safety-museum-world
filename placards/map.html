@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Floor plan · The Museum of AI Safety</title>
+<style>
+:root{--gold:#e9b949;--ink:#ece5d3;--dim:#9a927e;--bg:#0b0b0e;--card:#141318}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Avenir Next",Avenir,"Helvetica Neue",Arial,sans-serif}
+body{padding:18px 16px 36px}.card{max-width:1100px;margin:0 auto;background:var(--card);border:1px solid #2b2a30;outline:1px solid rgba(233,185,73,.28);outline-offset:6px;padding:24px 26px}
+.chip{font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);font-weight:600}h1{font-size:26px;font-weight:500;margin:8px 0 6px}
+p{color:#cfc9bb;line-height:1.6;margin:6px 0 14px;max-width:70ch}img{width:100%;display:block;border:1px solid #2b2a30;image-rendering:pixelated;image-rendering:crisp-edges}
+.cols{display:flex;gap:28px;flex-wrap:wrap;margin-top:16px}ul{list-style:none;padding:0;margin:0;columns:2;column-gap:22px;font-size:14px}li{margin:0 0 6px;break-inside:avoid;display:flex;align-items:center;gap:8px}
+li span{width:11px;height:11px;display:inline-block}li i{width:20px;height:5px;display:inline-block}h2{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:600}
+a{color:var(--gold)}
+</style></head><body><div class="card">
+<div class="chip">Floor plan</div><h1 id="title">You are here</h1>
+<p>Follow the coloured lines on the floor to reach the far wings, and read the floor signposts at every doorway: each one lists what lies in each direction. Close this panel to return to the museum.</p>
+<img id="plan" src="map/museum.png" alt="Floor plan of the Museum of AI Safety with every hall named">
+<div class="cols"><div><h2>Lines on the floor</h2><ul style="columns:1"><li><i style="background:#e9b949"></i>South Wings</li><li><i style="background:#63d6d0"></i>New Wing, Arcade, Mirrors</li><li><i style="background:#e59fd0"></i>The Midway</li></ul></div><div style="flex:1;min-width:280px"><h2>Halls</h2><ul><li><span style="background:#c9a06a"></span>Origins Hall</li><li><span style="background:#e8e46e"></span>Midway</li><li><span style="background:#e2c46e"></span>Rotunda</li><li><span style="background:#7ec3e8"></span>Forecasts</li><li><span style="background:#63d6d0"></span>Glass Brain</li><li><span style="background:#b48ce8"></span>Genie Room</li><li><span style="background:#ee6a5c"></span>Failures</li><li><span style="background:#e0b478"></span>The Foyer</li><li><span style="background:#d9a05f"></span>Old Office</li><li><span style="background:#e0993f"></span>Gift Shop</li><li><span style="background:#9fd8a8"></span>New Wing</li><li><span style="background:#b8c4dd"></span>Workbench</li><li><span style="background:#ffa94d"></span>Arcade</li><li><span style="background:#e59fd0"></span>Hall Of Mirrors</li><li><span style="background:#d9a05f"></span>Office Floor</li><li><span style="background:#e8b45a"></span>High Street</li><li><span style="background:#7ec3e8"></span>Waiting Room</li><li><span style="background:#b48ce8"></span>Memory Wing</li><li><span style="background:#8fe8ae"></span>Verification</li><li><span style="background:#ee6a5c"></span>Off Switch</li></ul></div></div>
+<p style="margin-top:18px"><a href="index.html">Museum directory</a></p>
+</div>
+<script>
+(function(){var at=new URLSearchParams(location.search).get("at");var img=document.getElementById("plan");
+if(at&&/^[a-z]+$/.test(at)){img.onerror=function(){img.onerror=null;img.src="map/museum.png";document.getElementById("title").textContent="Floor plan";};img.src="map/"+at+".png";}
+else document.getElementById("title").textContent="Floor plan";})();
+</script></body></html>
